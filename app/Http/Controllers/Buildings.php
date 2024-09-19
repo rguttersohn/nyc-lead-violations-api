@@ -21,14 +21,15 @@ class Buildings extends Controller
         return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council')
             ->selectRaw('
                 AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid = 19) as avg_days_before_closed,
-                AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
+                AVG(NOW() - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
                 ')
         // eager load violations
             ->with('violations', function($query)use($start_formatted, $end_formatted){
                 $query->select('nyc_open_data_violation_id','apartment','building_id','codes.ordernumber','codes.definition', 'inspectiondate', 'currentstatusdate','currentstatusid')
-                    ->selectRaw('violations.currentstatusdate - violations.inspectiondate as days_open')
+                    ->selectRaw('CASE WHEN currentstatusid = 19 THEN currentstatusdate - inspectiondate ELSE CURRENT_DATE - inspectiondate END as days_open')
                     ->join('codes', 'codes.ordernumber', 'violations.ordernumber')
-                    ->where([['violations.inspectiondate', '>=', $start_formatted],['violations.inspectiondate', '<=', $end_formatted]]);
+                    ->where([['violations.inspectiondate', '>=', $start_formatted],['violations.inspectiondate', '<=', $end_formatted]])
+                    ;
             })
             // join violations
             ->join('violations', 'violations.building_id', 'buildings.nyc_open_data_building_id')
