@@ -19,12 +19,19 @@ class Buildings extends Controller
         $end_formatted = "$end_year-12-31";
 
         return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council')
-            // join violations
+            ->selectRaw('
+                AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid = 19) as avg_days_before_closed,
+                AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
+                ')
+        // eager load violations
             ->with('violations', function($query)use($start_formatted, $end_formatted){
                 $query->select('nyc_open_data_violation_id','apartment','building_id','codes.ordernumber','codes.definition', 'inspectiondate', 'currentstatusdate','currentstatusid')
+                    ->selectRaw('violations.currentstatusdate - violations.inspectiondate as days_open')
                     ->join('codes', 'codes.ordernumber', 'violations.ordernumber')
                     ->where([['violations.inspectiondate', '>=', $start_formatted],['violations.inspectiondate', '<=', $end_formatted]]);
             })
+            // join violations
+            ->join('violations', 'violations.building_id', 'buildings.nyc_open_data_building_id')
             // join senate district
             ->join('senate_districts as sd', function($join){
                 $join->on(...PostGIS::createSpatialJoin('buildings.point', 'sd.polygon'))
@@ -41,6 +48,7 @@ class Buildings extends Controller
                     ->orOn(...PostGis::createSpatialJoin('buildings.point', 'cd.multipolygon'));
             })
             ->where('nyc_open_data_building_id', $nyc_open_data_building_id)
+            ->groupBy('nyc_open_data_building_id', 'bin', 'address', 'zip', 'senate','assembly', 'council')
             ->get()->toArray();        
     }
 }

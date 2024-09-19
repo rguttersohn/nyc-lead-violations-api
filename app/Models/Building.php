@@ -32,6 +32,8 @@ class Building extends Model
             'nyc_open_data_building_id' => 'integer',
             'bin' => 'integer',
             'councildistrict' => 'integer',
+            'avg_days_open' => 'float',
+            'avg_days_before_closed' => 'float'
         ];
     }
 
