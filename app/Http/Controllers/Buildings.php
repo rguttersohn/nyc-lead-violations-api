@@ -21,7 +21,7 @@ class Buildings extends Controller
         return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council')
             ->selectRaw('
                 AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid = 19) as avg_days_before_closed,
-                AVG(NOW() - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
+                AVG(CURRENT_DATE - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
                 ')
         // eager load violations
             ->with('violations', function($query)use($start_formatted, $end_formatted){
