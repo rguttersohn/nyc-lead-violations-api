@@ -18,7 +18,7 @@ class Buildings extends Controller
         $start_formatted = "$start_year-01-01";
         $end_formatted = "$end_year-12-31";
 
-        return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council')
+        return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council', 'point')
             ->selectRaw('
                 AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid = 19) as avg_days_before_closed,
                 AVG(CURRENT_DATE - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
@@ -49,7 +49,7 @@ class Buildings extends Controller
                     ->orOn(...PostGis::createSpatialJoin('buildings.point', 'cd.multipolygon'));
             })
             ->where('nyc_open_data_building_id', $nyc_open_data_building_id)
-            ->groupBy('nyc_open_data_building_id', 'bin', 'address', 'zip', 'senate','assembly', 'council')
+            ->groupBy('nyc_open_data_building_id', 'bin', 'address', 'zip', 'senate','assembly', 'council', 'point')
             ->get()->toArray();        
     }
 }

@@ -28,7 +28,7 @@ class Building extends Model
     protected function casts (){
 
         return [
-            'longlat' => Point::class,
+            'point' => Point::class,
             'nyc_open_data_building_id' => 'integer',
             'bin' => 'integer',
             'councildistrict' => 'integer',
