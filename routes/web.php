@@ -9,8 +9,7 @@ use App\Http\Controllers\Districts;
 use App\Http\Controllers\Years;
 use App\Http\Controllers\District;
 use App\Http\Controllers\Representatives;
-
-use function PHPSTORM_META\map;
+use App\Http\Controllers\Summary;
 
 Route::get('/', function () {
     return [

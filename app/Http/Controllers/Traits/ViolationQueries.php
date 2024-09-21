@@ -23,12 +23,20 @@ trait ViolationQueries {
       return $string;
     }
 
+
+    private function formatDistrictHousingTableName($string) {
+      // Remove all underscores
+      $string = explode('_', $string);
+      
+      return $string[0] . '_housing';
+    }
+
     private function queryViolations(string $uri, string $status, string $start_year, string $end_year):array{
 
         $start_formatted = "$start_year-01-01";
         $end_formatted = "$end_year-12-31";
         $cache_key = CacheKey::generateQueryKey($uri, $status, $start_year, $end_year);
-
+                
         $data = DB::table('buildings as b')
           ->selectRaw('b.address,b.geo_type, b.bin, b.nyc_open_data_building_id, st_asgeojson(point) as point, count(v.nyc_open_data_violation_id) as violations',)
           ->join('violations as v', 'v.building_id', 'b.nyc_open_data_building_id')
@@ -81,11 +89,13 @@ trait ViolationQueries {
 
       $district_selection_name = $this->formatDistrictSelectionName($table_name);
       $cache_key = CacheKey::generateQueryKey($uri, $status, $start_year, $end_year);
-
+      
+      $housing_table = $this->formatDistrictHousingTableName($table_name);
       
       return DB::table("$table_name")
-        ->selectRaw("'$start_year' as start_year,'$end_year' as end_year, '$status' as status, $table_name.$district_selection_name as district, COALESCE(COUNT(v.*),0) as violations")
+        ->selectRaw("'$start_year' as start_year,'$end_year' as end_year,$housing_table.units, '$status' as status, $table_name.$district_selection_name as district, COALESCE(COUNT(v.*),0) as violations")
         ->where("$table_name.$district_selection_name", $district_id)
+        ->leftjoin("$housing_table", "$housing_table.$district_selection_name", "$table_name.$district_selection_name")
         ->leftjoin('buildings as b', function($join)use($table_name){
             $join->on(...PostGIS::createSpatialJoin('b.point',"$table_name.polygon"))
                 ->orOn(...PostGIS::createSpatialJoin('b.point', "$table_name.multipolygon"));
@@ -94,7 +104,7 @@ trait ViolationQueries {
             $join->on('b.nyc_open_data_building_id', 'v.building_id')
                 ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted], ['b.point', '!=', null]]);
         })
-        ->groupBy('start_year','end_year','status','district')
+        ->groupBy('start_year','end_year','status','district', 'units')
         ->get()->toArray();
     } 
 }
