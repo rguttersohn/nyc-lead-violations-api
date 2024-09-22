@@ -5,6 +5,7 @@ use Database\Seeders\BuildingViolationSeeder;
 use App\Services\OpenDataQueries;
 use App\Models\Violation;
 use App\Models\Building;
+use App\Models\ScheduleRun;
 
 return new class extends Migration
 {
@@ -21,7 +22,9 @@ return new class extends Migration
         
         $building = new Building();
 
-        $seeder->run($queries, $violation, $building );
+        $schedule_run = new ScheduleRun();
+
+        $seeder->run($queries, $violation, $building, $schedule_run );
     }
 
     /**

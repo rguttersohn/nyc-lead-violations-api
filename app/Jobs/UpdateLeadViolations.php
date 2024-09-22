@@ -64,13 +64,12 @@ class UpdateLeadViolations implements ShouldQueue
         $this->schedule_run->success = false;
 
         $this->schedule_run->save();
-
+        
         $data = Http::withQueryParameters([
             '$$app_token' => $queries->getAPIKey(),
             '$select' => $queries->getSelectedColumns(),
             '$where' => "caseless_one_of(`ordernumber`,{$queries->getOrderNumbers()}) AND {$queries->getDates($timestamp)}",
             '$order' => 'currentstatusdate ASC',
-            '$limit' => 5
         ])
         ->get($queries->getEndpoint());
 

@@ -12,12 +12,13 @@ use App\Models\Violation;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Pool;
 use App\Models\Building;
-
+use App\Models\ScheduleRun;
+use Illuminate\Support\Carbon;
 
 class BuildingViolationSeeder extends Seeder
 {
 
-    private int $limit = 1000;
+    private int $limit = 10000;
     
     private int $count;
 
@@ -25,8 +26,17 @@ class BuildingViolationSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(OpenDataQueries $queries, Violation $violation, Building $building): void
+    public function run(OpenDataQueries $queries, Violation $violation, Building $building, ScheduleRun $schedule_run): void
     {
+
+        /**
+         * store schedule data in table
+         */
+
+        $schedule_run->name = 'update_lead_violations';
+        $schedule_run->success = false;
+
+        $schedule_run->save();
 
         /**
          * get the row count
@@ -147,6 +157,8 @@ class BuildingViolationSeeder extends Seeder
             
         endforeach;
 
-        
+        $schedule_run->success = true;
+        $schedule_run->completed_on = Carbon::now();
+        $schedule_run->save();
     }
 }

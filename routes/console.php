@@ -23,4 +23,4 @@ Schedule::call(function(){
 
     $job->handle($queries);
 
-})->timezone('America/New_York')->dailyAt('23:59');
+})->timezone('America/New_York')->dailyAt('16:08');
