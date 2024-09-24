@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\ValidateQueryParams;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Exception;
@@ -13,7 +14,7 @@ use App\Support\GeoJSON;
 
 class Violations3D extends Controller
 {
-    use ViolationQueries;
+    use ViolationQueries, ValidateQueryParams;
    
     public function getViolations(Request $request){
 
@@ -24,7 +25,11 @@ class Violations3D extends Controller
 
         $cache_key = CacheKey::generateGeoJsonKey($uri, $start_year, $end_year, $status, '3d');
 
-        $data = $this->queryViolations($uri, $status, $start_year, $end_year);
+        $valid_status = $this->getValidStatusQuery($status);
+
+        $status_needs_checking = $this->statusNeedsToBeChecked($valid_status);
+
+        $data = $this->queryViolations($uri, $status, $start_year, $end_year, $status_needs_checking);
 
         $geojson = GeoJSON::get3DGeoJson($data, ['address','bin', 'nyc_open_data_building_id', 'violations']);
         

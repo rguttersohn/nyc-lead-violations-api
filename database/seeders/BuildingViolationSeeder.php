@@ -58,8 +58,8 @@ class BuildingViolationSeeder extends Seeder
         endif;
 
         $count_decoded = json_decode($count->body());
-
-        $this->count = 3000;
+        
+        $this->count = $count_decoded[0]->count_buildingid;
         
 
         /**
@@ -107,13 +107,14 @@ class BuildingViolationSeeder extends Seeder
                 $current_building = $building->where('nyc_open_data_building_id', (int)$attributes->buildingid)->first();
                 
                 if(!$current_building):
-                    
+                
                     $building->create([
                         'nyc_open_data_building_id' => $attributes->buildingid,
                         'bin' => isset($attributes->bin) ? $attributes->bin : null,
                         'address' => "$attributes->housenumber $attributes->streetname",
                         'point' => isset($attributes->longitude, $attributes->latitude) ? new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value) : null,
                         'zip' => isset($attributes->zip) ? $attributes->zip : null,
+                        'councildistrict' => isset($attributes->councildistrict) ? $attributes->councildistrict : null,
 
                     ]);
 
@@ -126,8 +127,14 @@ class BuildingViolationSeeder extends Seeder
 
                     endif;
 
-                    if($current_building->point === null && isset($attributes->longitude, $attributes->latitude)):
+                    if($current_building->councildistrict === null && isset($attributes->councildistrict)):
                         
+                        $current_building->councildistrict = (int)$attributes->councildistrict;
+                        $current_building->save();
+
+                    endif;
+
+                    if($current_building->point === null && isset($attributes->longitude, $attributes->latitude)):
                         $current_building->point = new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value);
                         $current_building->save();
 

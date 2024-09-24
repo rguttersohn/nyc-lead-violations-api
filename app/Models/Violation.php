@@ -29,8 +29,8 @@ class Violation extends Model
         return [
             'nyc_open_data_violation_id' => 'integer',
             'ordernumber' => 'integer',
-            'currentstatusdate' => 'timestamp',
-            'inspectiondate' => 'timestamp',
+            'currentstatusdate' => 'date:F d, Y',
+            'inspectiondate' => 'date:F d, Y',
             'building_id' => 'integer'
         ];
     }

@@ -32,7 +32,10 @@ class Buildings extends Controller
                     ;
             })
             // join violations
-            ->join('violations', 'violations.building_id', 'buildings.nyc_open_data_building_id')
+            ->join('violations', function($join)use($start_formatted, $end_formatted){
+                $join->on('violations.building_id', 'buildings.nyc_open_data_building_id')
+                    ->where([['violations.inspectiondate','>=',$start_formatted], ['violations.inspectiondate','<=', $end_formatted]]);
+            })
             // join senate district
             ->join('senate_districts as sd', function($join){
                 $join->on(...PostGIS::createSpatialJoin('buildings.point', 'sd.polygon'))

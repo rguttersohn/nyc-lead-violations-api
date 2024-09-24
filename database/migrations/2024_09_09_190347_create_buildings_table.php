@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('zip')->nullable();
             $table->string('geo_type', 100);
             $table->geometry('point', subtype: 'point', srid: 4326)->nullable();
+            $table->smallInteger('councildistrict')->nullable();
         });
     }
 

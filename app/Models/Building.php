@@ -15,9 +15,10 @@ class Building extends Model
         'id',
         'bin',
         'address',
-        'longlat',
+        'point',
         'zip',
         'nyc_open_data_building_id',
+        'councildistrict'
     ];
 
     protected $attributes = [
