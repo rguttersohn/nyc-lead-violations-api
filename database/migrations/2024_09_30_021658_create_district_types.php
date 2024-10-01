@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\DistrictType;
+use Database\Seeders\DistricTypeSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,13 +13,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schedule_runs', function (Blueprint $table) {
+        Schema::create('district_types', function (Blueprint $table) {
+            
             $table->id();
             $table->timestamps();
-            $table->string('name');
-            $table->date('completed_on')->nullable();
-            $table->boolean('success');
+            $table->text('type');
+            
         });
+
+        $district_type = new DistrictType();
+        $seeder = new DistricTypeSeeder();
+        $seeder->run($district_type);
     }
 
     /**
@@ -25,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('schedule_runs');
+        Schema::dropIfExists('district_types');
     }
 };

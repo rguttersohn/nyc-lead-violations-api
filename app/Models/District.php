@@ -9,19 +9,20 @@ use Illuminate\Database\Eloquent\Model;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
 use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
 
-class SenateDistrict extends Model
+class District extends Model
 {
     use HasFactory;
 
-    protected $table = 'senate_districts';
+    protected $table = 'districts';
 
     protected $fillable = [
-        'senatedistrict',
-        'geo_type', 
-        'polygon', 
+        'district_type_id', 
+        'number',
+        'geo_type',
+        'polygon',
         'multipolygon'
-
     ];
+
 
     protected $casts = [
         'polygon' => Polygon::class,
@@ -39,4 +40,6 @@ class SenateDistrict extends Model
         
         };
     }
+
+    
 }

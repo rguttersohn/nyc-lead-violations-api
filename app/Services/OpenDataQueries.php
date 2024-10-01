@@ -9,11 +9,8 @@ class OpenDataQueries {
 
     private string $select_columns = " `buildingid`,
                 `bin`,
-                `councildistrict`,
                 `ordernumber`,
                 `boro`,
-                `longitude`,
-                `latitude`,
                 `streetname`,
                 `housenumber`,
                 `apartment`,
@@ -46,6 +43,14 @@ class OpenDataQueries {
 
     public function getDates(string $timestamp){
       return "currentstatusdate > '$timestamp'";
+    }
+
+    public function getStartYear(string $year){
+      return "inspectiondate >= '$year-01-01T00:00:00'";
+    }
+
+    public function getEndYear(string $year){
+      return "inspectiondate <= '$year-12-31T00:00:00'";
     }
 
     public function getSelectedColumns():string{

@@ -28,7 +28,7 @@ class Violations2D extends Controller
 
         $data = $this->queryViolations($uri, $status, $start_year, $end_year, $status_needs_checking);
 
-        $geojson = GeoJSON::getGeoJSON($data, ['address','bin', 'nyc_open_data_building_id', 'violations']);
+        $geojson = GeoJSON::getGeoJSON($data, ['streetname','housenumber','bin', 'nyc_open_data_building_id', 'violations']);
 
         return $geojson;
       

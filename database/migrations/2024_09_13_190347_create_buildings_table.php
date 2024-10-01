@@ -16,11 +16,11 @@ return new class extends Migration
             $table->timestamps();
             $table->integer('nyc_open_data_building_id')->unique();
             $table->integer('bin')->nullable();
-            $table->text('address');
-            $table->integer('zip')->nullable();
+            $table->text('housenumber');
+            $table->text('streetname');
             $table->string('geo_type', 100);
             $table->geometry('point', subtype: 'point', srid: 4326)->nullable();
-            $table->smallInteger('councildistrict')->nullable();
+            $table->text('boro')->nullable();
         });
     }
 

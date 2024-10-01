@@ -1,0 +1,102 @@
+[
+  {
+    "currentstatusid": 1,
+    "name": "Violation Open",
+    "definition": "The violation is active and still requires action from the owner or the violation has been properly certified and is pending the statutory period for reinspection or dismissal."
+  },
+  {
+    "currentstatusid": 2,
+    "name": "Notice of Violation Sent Out",
+    "definition": "The Notice of Violation was sent to the registered owner or \"Owner of the Premises\"."
+  },
+  {
+    "currentstatusid": 3,
+    "name": "Notice of Violation Certified On Time",
+    "definition": "The violation was certified as corrected by the Owner on time and properly."
+  },
+  {
+    "currentstatusid": 4,
+    "name": "Notice of Violation Certified Late",
+    "definition": "The violation was certified as corrected by the Owner but was not submitted to HPD in a timely manner. Therefore, the certification was not acceptable."
+  },
+  {
+    "currentstatusid": 6,
+    "name": "Certification Postponement Granted",
+    "definition": "The property owner applied to HPD to extend the correction date for the violation, and HPD granted the request.  The new correction and certification date is in the columns NEW CORRECT BY DATE and  NEW CERT BY DATE."
+  },
+  {
+    "currentstatusid": 7,
+    "name": "Certification Postponement Denied",
+    "definition": "The property owner applied to HPD to extend the correction date for the violation, and HPD denied the request.  The condition must be corrected by the original correction date."
+  },
+  {
+    "currentstatusid": 8,
+    "name": "False Certification",
+    "definition": "The violation was certified as corrected by the Owner on time and properly.  A subsequent re-inspection of the condition by HPD found that condition had not been properly corrected.  The violation is open and is subject to civil penalties for false certification."
+  },
+  {
+    "currentstatusid": 10,
+    "name": "Civ 14 Mailed",
+    "definition": ""
+  },
+  {
+    "currentstatusid": 11,
+    "name": "Violation Will Be Reinspected",
+    "definition": "HPD will be attempting to reinspect this violation."
+  },
+  {
+    "currentstatusid": 19,
+    "name": "Violation Closed",
+    "definition": "The violation has been closed."
+  },
+  {
+    "currentstatusid": 20,
+    "name": "Defect Letter Issued",
+    "definition": "The violation condition was observed corrected by the Department.  However, documentation required to close the violation has not yet been received and the violation remains open."
+  },
+  {
+    "currentstatusid": 21,
+    "name": "Not Complied With",
+    "definition": "A reinspection of the violation found that the condition still exists as of the status date."
+  },
+  {
+    "currentstatusid": 22,
+    "name": "First No Access To Reinspect Violation",
+    "definition": "HPD attempted to reinspect the violation but there was no access.  The violation remains open."
+  },
+  {
+    "currentstatusid": 23,
+    "name": "Second No Access to Reinspect Violation",
+    "definition": "HPD made a second attempt to reinspect the violation but there was no access.  The violation remains open."
+  },
+  {
+    "currentstatusid": 24,
+    "name": "Violation Reopen",
+    "definition": "The violation was returned to open status from closed."
+  },
+  {
+    "currentstatusid": 27,
+    "name": "Info Notice of Violation Sent Out",
+    "definition": "Info NOVs are notice that an order has been issued by the Department.  These orders do not have associated certification or correction dates and are used to serve notice upon current and future owners regarding open agency Orders."
+  },
+  {
+    "currentstatusid": 28,
+    "name": "Invalid Certfication",
+    "definition": "A certification has been submitted but was not acceptable due to a defect in the certification documentation."
+  },
+  {
+    "currentstatusid": 49,
+    "name": "Lead Docs Submitted, Acceptable",
+    "definition": null
+  },
+  {
+    "currentstatusid": 50,
+    "name": "Lead Docs Submitted, Not Acceptable",
+    "definition": null
+  },
+  {
+    "currentstatusid": 9,
+    "name": "Violation Dismissed",
+    "definition": null
+  }
+]

@@ -5,17 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CouncilHousing extends Model
+class Housing extends Model
 {
     use HasFactory;
 
-    protected $table = 'council_housing';
+    protected $table = 'housing';
 
     protected $fillable = [
-        'councildistrict',
+        'district_id',
         'units',
-        'relevance_start',
-        'relevance_end',
         'source'
     ];
+
+    
 }

@@ -1,10 +1,11 @@
 <?php
 
+use Database\Seeders\DistrictSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\SenateDistrict;
-use Database\Seeders\SenateDistrictsSeeder;
+use App\Models\District;
+use App\Models\DistrictType;
 
 return new class extends Migration
 {
@@ -13,21 +14,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('senate_districts', function (Blueprint $table) {
+        Schema::create('districts', function (Blueprint $table) {
+            
             $table->id();
             $table->timestamps();
-            $table->smallInteger('senatedistrict')->unique();
+            $table->foreignId('district_type_id')->constrained('district_types', 'id');
+            $table->smallInteger('number');
             $table->string('geo_type', 100)->nullable();
             $table->geometry('polygon', subtype: 'polygon', srid: 4326)->nullable();
             $table->geometry('multipolygon', subtype: 'multipolygon', srid: 4326)->nullable();
+        
         });
 
-        $senate_district = new SenateDistrict();
-
-        $seeder = new SenateDistrictsSeeder();
-
-        $seeder->run($senate_district);
-
+        $district = new District();
+        $district_type = new DistrictType();
+        $seeder = new DistrictSeeder();
+        $seeder->run($district, $district_type);
     }
 
     /**
@@ -35,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('senate_districts');
+        Schema::dropIfExists('districts');
     }
 };

@@ -10,13 +10,15 @@ use Illuminate\Support\Carbon;
 
 class Buildings extends Controller
 {
-    public function getBuilding(Request $request, $nyc_open_data_building_id){
+    public function getBuilding(Request $request, $id){
 
         $start_year = $request->query('start_year', Carbon::now('edt')->format('Y'));
         $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
 
         $start_formatted = "$start_year-01-01";
         $end_formatted = "$end_year-12-31";
+
+        $query_using = $request->query('query_using', 'nyc_open_data_building_id');
 
         return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council', 'point')
             ->selectRaw('
@@ -51,7 +53,7 @@ class Buildings extends Controller
                 $join->on(...PostGIS::createSpatialJoin('buildings.point', 'cd.polygon'))
                     ->orOn(...PostGis::createSpatialJoin('buildings.point', 'cd.multipolygon'));
             })
-            ->where('nyc_open_data_building_id', $nyc_open_data_building_id)
+            ->where($query_using, $id)
             ->groupBy('nyc_open_data_building_id', 'bin', 'address', 'zip', 'senate','assembly', 'council', 'point')
             ->get()->toArray();        
     }

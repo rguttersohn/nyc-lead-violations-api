@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('ordernumber')->constrained('codes', 'ordernumber')->cascadeOnDelete();
             $table->date('inspectiondate');
             $table->date('currentstatusdate');
-            $table->integer('currentstatusid');
+            $table->foreignId('currentstatusid')->constrained('statuses', 'currentstatusid')->cascadeOnDelete();
         });
 
     }

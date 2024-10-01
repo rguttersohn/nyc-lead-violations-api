@@ -16,7 +16,6 @@ use Illuminate\Support\Carbon;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Enums\Srid;
 use App\Models\ScheduleRun;
-use Illuminate\Support\Str;
 use App\Models\Building;
 
 
@@ -57,9 +56,8 @@ class UpdateLeadViolations implements ShouldQueue
 
         endif;
 
-        $timestamp = Str::replaceFirst(' ', 'T', $last_completed_on);
+        $timestamp = "{$last_completed_on}T00:00:00";
 
-        $timestamp = "2024-09-01T00:00:00";
         $this->schedule_run->name = 'update_lead_violations';
         $this->schedule_run->success = false;
 
@@ -92,7 +90,8 @@ class UpdateLeadViolations implements ShouldQueue
                 $this->building->create([
                     'nyc_open_data_building_id' => $attributes->buildingid,
                     'bin' => isset($attributes->bin) ? $attributes->bin : null,
-                    'address' => "$attributes->housenumber $attributes->streetname",
+                    'housenumber' => $attributes->housenumber,
+                    'streetname' => $attributes->streetname,
                     'point' => isset($attributes->longitude, $attributes->latitude) ? new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value) : null,
                     'zip' => isset($attributes->zip) ? $attributes->zip : null,
 

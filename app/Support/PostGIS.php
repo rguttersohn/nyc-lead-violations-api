@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class PostGIS {
 
-    public static function createSpatialJoin(string $point, string $area, string $boolean = "true"):array {
+    public static function createSpatialJoin(string $table_name, string $point, string $first_geometry, string $second_geometry, string $boolean = "true"):array {
         
-        return [DB::raw("st_within($point, $area)"), "=", DB::raw("$boolean")];
+        return [DB::raw("ST_within($point, CASE WHEN $table_name.geo_type = $first_geometry THEN $table_name.$first_geometry WHEN $table_name.geo_type = $second_geometry THEN $table_name.$second_geometry END)"), "=", DB::raw("$boolean")];
     }
+
 }

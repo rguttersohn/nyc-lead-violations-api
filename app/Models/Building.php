@@ -14,11 +14,12 @@ class Building extends Model
     protected $fillable = [
         'id',
         'bin',
-        'address',
+        'housenumber',
+        'streetname',
         'point',
         'zip',
         'nyc_open_data_building_id',
-        'councildistrict'
+        'boro'
     ];
 
     protected $attributes = [

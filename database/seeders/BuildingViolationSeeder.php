@@ -13,12 +13,13 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Pool;
 use App\Models\Building;
 use App\Models\ScheduleRun;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Carbon;
 
 class BuildingViolationSeeder extends Seeder
 {
 
-    private int $limit = 10000;
+    private int $limit = 5000;
     
     private int $count;
 
@@ -58,9 +59,9 @@ class BuildingViolationSeeder extends Seeder
         endif;
 
         $count_decoded = json_decode($count->body());
-        
+       
         $this->count = $count_decoded[0]->count_buildingid;
-        
+
 
         /**
          * get the data
@@ -77,9 +78,11 @@ class BuildingViolationSeeder extends Seeder
                     '$select' => $queries->getSelectedColumns(),
                     '$limit' => $this->limit,
                     '$offset' => $offset,
-                    '$where' => "caseless_one_of(`ordernumber`,{$queries->getOrderNumbers()})",
+                    '$where' => "caseless_one_of(`ordernumber`,{$queries->getOrderNumbers()}) AND {$queries->getStartYear(2024)} AND {$queries->getEndYear(2024)}",
                     '$order' => 'violationid'
-                ])->get($queries->getEndpoint()));
+                ])
+                ->retry(5, 300)
+                ->get($queries->getEndpoint()));
             }
 
             return $pool_array;
@@ -91,6 +94,12 @@ class BuildingViolationSeeder extends Seeder
         
         foreach($data as $d):
 
+            if($d instanceof ConnectionException || $d instanceof RequestException):
+                Log::error($d->getMessage());
+                dd($d->getMessage());
+                return;
+            endif;
+
             if(!$d->ok()):
                 
                 Log::error($d);
@@ -101,21 +110,19 @@ class BuildingViolationSeeder extends Seeder
 
             $d_decoded = json_decode($d->body());
             
-
             foreach($d_decoded as $attributes):
-
+                
                 $current_building = $building->where('nyc_open_data_building_id', (int)$attributes->buildingid)->first();
                 
                 if(!$current_building):
-                
+
                     $building->create([
                         'nyc_open_data_building_id' => $attributes->buildingid,
                         'bin' => isset($attributes->bin) ? $attributes->bin : null,
-                        'address' => "$attributes->housenumber $attributes->streetname",
-                        'point' => isset($attributes->longitude, $attributes->latitude) ? new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value) : null,
-                        'zip' => isset($attributes->zip) ? $attributes->zip : null,
-                        'councildistrict' => isset($attributes->councildistrict) ? $attributes->councildistrict : null,
-
+                        'housenumber' => $attributes->housenumber, 
+                        'streetname' => $attributes->streetname,
+                        'point' => null,
+                        'boro' => isset($attributes->boro) ? $attributes->boro : null,
                     ]);
 
                 else:
@@ -127,36 +134,22 @@ class BuildingViolationSeeder extends Seeder
 
                     endif;
 
-                    if($current_building->councildistrict === null && isset($attributes->councildistrict)):
+                    if($current_building->boro === null && isset($attributes->boro)):
                         
-                        $current_building->councildistrict = (int)$attributes->councildistrict;
-                        $current_building->save();
-
-                    endif;
-
-                    if($current_building->point === null && isset($attributes->longitude, $attributes->latitude)):
-                        $current_building->point = new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value);
-                        $current_building->save();
-
-                    endif;
-
-
-                    if($current_building->zip === null && isset($attributes->zip)):
-                        
-                        $current_building->zip = $attributes->zip;
+                        $current_building->boro = $attributes->boro;
                         $current_building->save();
 
                     endif;
 
                 endif;
-                
+                dump($attributes->currentstatusid);
                 $violation->create([
                     'nyc_open_data_violation_id' => $attributes->violationid,
                     'building_id' => $attributes->buildingid,
                     'ordernumber' => $attributes->ordernumber,
                     'inspectiondate' => $attributes->inspectiondate,
                     'currentstatusdate' => $attributes->currentstatusdate,
-                    'currentstatusid' => $attributes->currentstatusid,
+                    'currentstatusid' => (int)$attributes->currentstatusid,
                     'apartment' => isset($attributes->apartment) ? $attributes->apartment : null
                 ]);
 

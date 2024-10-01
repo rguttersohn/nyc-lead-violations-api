@@ -31,7 +31,7 @@ class Violations3D extends Controller
 
         $data = $this->queryViolations($uri, $status, $start_year, $end_year, $status_needs_checking);
 
-        $geojson = GeoJSON::get3DGeoJson($data, ['address','bin', 'nyc_open_data_building_id', 'violations']);
+        $geojson = GeoJSON::get3DGeoJson($data, ['streetname','housenumber','bin', 'nyc_open_data_building_id', 'violations']);
         
         return $geojson;
   
