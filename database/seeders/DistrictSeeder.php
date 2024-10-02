@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use App\Models\District;
-use App\Support\GeoJSON;
+use App\Support\PostGIS;
 use App\Models\DistrictType;
 
 class DistrictSeeder extends Seeder
@@ -31,8 +30,8 @@ class DistrictSeeder extends Seeder
                 'district_type_id' => $assembly_id,
                 'number' => $feature->properties->AssemDist,
                 'geo_type' => District::validateGeoType($feature->geometry->type),
-                'polygon' => $feature->geometry->type === 'Polygon' ? GeoJSON::createPolygon($feature->geometry->coordinates) : null,
-                'multipolygon' => $feature->geometry->type === 'MultiPolygon' ? GeoJSON::createMultiPolygon($feature->geometry->coordinates) : null,
+                'polygon' => $feature->geometry->type === 'Polygon' ? PostGIS::createPolygon($feature->geometry->coordinates) : null,
+                'multipolygon' => $feature->geometry->type === 'MultiPolygon' ? PostGIS::createMultiPolygon($feature->geometry->coordinates) : null,
             ]);
         
             
@@ -54,8 +53,8 @@ class DistrictSeeder extends Seeder
                 'district_type_id' => $senate_id,
                 'number' => $feature->properties->StSenDist,
                 'geo_type' => District::validateGeoType($feature->geometry->type),
-                'polygon' => $feature->geometry->type === 'Polygon' ? GeoJSON::createPolygon($feature->geometry->coordinates) : null,
-                'multipolygon' => $feature->geometry->type === 'MultiPolygon' ? GeoJSON::createMultiPolygon($feature->geometry->coordinates) : null,
+                'polygon' => $feature->geometry->type === 'Polygon' ? PostGIS::createPolygon($feature->geometry->coordinates) : null,
+                'multipolygon' => $feature->geometry->type === 'MultiPolygon' ? PostGIS::createMultiPolygon($feature->geometry->coordinates) : null,
             ]);
             
         endforeach;
@@ -75,8 +74,8 @@ class DistrictSeeder extends Seeder
                 'district_type_id' => $council_id,
                 'number' => $feature->properties->CounDist,
                 'geo_type' => District::validateGeoType($feature->geometry->type),
-                'polygon' => $feature->geometry->type === 'Polygon' ? GeoJSON::createPolygon($feature->geometry->coordinates) : null,
-                'multipolygon' => $feature->geometry->type === 'MultiPolygon' ? GeoJSON::createMultiPolygon($feature->geometry->coordinates) : null,
+                'polygon' => $feature->geometry->type === 'Polygon' ? PostGIS::createPolygon($feature->geometry->coordinates) : null,
+                'multipolygon' => $feature->geometry->type === 'MultiPolygon' ? PostGIS::createMultiPolygon($feature->geometry->coordinates) : null,
             ]);
             
 

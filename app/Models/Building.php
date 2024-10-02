@@ -30,7 +30,7 @@ class Building extends Model
     protected function casts (){
 
         return [
-            'point' => Point::class,
+            'point' => 'array',
             'nyc_open_data_building_id' => 'integer',
             'bin' => 'integer',
             'councildistrict' => 'integer',
@@ -41,5 +41,48 @@ class Building extends Model
 
     public function violations():HasMany{
         return $this->hasMany(Violation::class, 'building_id', 'nyc_open_data_building_id');
+    }
+
+    public function scopeJoinViolations($query, $start_formatted, $end_formatted, $status_needs_checking, $status, $join_type = null){
+        if($join_type === 'left'):
+
+            $query->leftJoin('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status){
+                $join->on('v.building_id', 'buildings.nyc_open_data_building_id')
+                    ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted]])
+                    ->when($status_needs_checking, function($query)use($status){
+    
+                      if($status === 'open'):
+                        
+                        $query->where('v.currentstatusid', "!=", 19);
+                      
+                      else:
+                        
+                        $query->where('v.currentstatusid', 19);
+                      
+                      endif;
+                  });
+              });
+
+        else:
+            
+            $query->join('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status){
+                $join->on('v.building_id', 'buildings.nyc_open_data_building_id')
+                    ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted]])
+                    ->when($status_needs_checking, function($query)use($status){
+    
+                      if($status === 'open'):
+                        
+                        $query->where('v.currentstatusid', "!=", 19);
+                      
+                      else:
+                        
+                        $query->where('v.currentstatusid', 19);
+                      
+                      endif;
+                  });
+              });
+
+        endif;
+        
     }
 }

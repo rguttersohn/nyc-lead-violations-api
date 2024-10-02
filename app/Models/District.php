@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
 use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
+use Illuminate\Support\Facades\DB;
 
 class District extends Model
 {
@@ -23,10 +24,9 @@ class District extends Model
         'multipolygon'
     ];
 
-
     protected $casts = [
-        'polygon' => Polygon::class,
-        'multipolygon' => MultiPolygon::class
+        'polygon' => 'array',
+        'multipolygon' => 'array'
     ];
 
     public static function validateGeoType(string | null $type):string | null | Exception  {
@@ -41,5 +41,66 @@ class District extends Model
         };
     }
 
+    public function scopeJoinBuildings($query, $join_type = null){
+        if($join_type === 'left'):
+            $query->leftJoin('buildings as b', function($join){
+                $join->on(DB::raw("ST_within(b.point, CASE WHEN districts.geo_type = 'polygon' THEN districts.polygon WHEN districts.geo_type='multipolygon' THEN districts.multipolygon ELSE NULL END)"),'=', DB::raw('true'));
+            });
+        else:
+            $query->join('buildings as b', function($join){
+                $join->on(DB::raw("ST_within(b.point, CASE WHEN districts.geo_type = 'polygon' THEN districts.polygon WHEN districts.geo_type='multipolygon' THEN districts.multipolygon ELSE NULL END)"),'=', DB::raw('true'));
+            });
+        endif;
+       
+    }
+
+    public function scopeJoinViolations($query, $start_formatted, $end_formatted, $status_needs_checking, $status, $join_type = null){
+        if($join_type === 'left'):
+
+            $query->leftJoin('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status){
+                $join->on('v.building_id', 'b.nyc_open_data_building_id')
+                    ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted]])
+                    ->when($status_needs_checking, function($query)use($status){
     
+                      if($status === 'open'):
+                        
+                        $query->where('v.currentstatusid', "!=", 19);
+                      
+                      else:
+                        
+                        $query->where('v.currentstatusid', 19);
+                      
+                      endif;
+                  });
+              });
+
+        else:
+            
+            $query->join('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status){
+                $join->on('v.building_id', 'b.nyc_open_data_building_id')
+                    ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted]])
+                    ->when($status_needs_checking, function($query)use($status){
+    
+                      if($status === 'open'):
+                        
+                        $query->where('v.currentstatusid', "!=", 19);
+                      
+                      else:
+                        
+                        $query->where('v.currentstatusid', 19);
+                      
+                      endif;
+                  });
+              });
+
+        endif;
+        
+    }
+
+    public function scopeCurrentDistrict($query, $district_id){
+
+        $query->select('number', 'id')->where('id', $district_id);
+    }
+
+  
 }

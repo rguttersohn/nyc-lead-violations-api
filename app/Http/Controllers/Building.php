@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Models\Building;
+use App\Models\Building as BuildingModel;
 use App\Support\PostGIS;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
-class Buildings extends Controller
+class Building extends Controller
 {
     public function getBuilding(Request $request, $id){
 
@@ -20,11 +21,15 @@ class Buildings extends Controller
 
         $query_using = $request->query('query_using', 'nyc_open_data_building_id');
 
-        return Building::select('nyc_open_data_building_id', 'bin', 'address', 'zip', 'sd.senatedistrict as senate','ad.assemblydistrict as assembly', 'cd.councildistrict as council', 'point')
+        return BuildingModel::select('nyc_open_data_building_id', 'bin', 'streetname', 'housenumber')
             ->selectRaw('
                 AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid = 19) as avg_days_before_closed,
                 AVG(CURRENT_DATE - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
                 ')
+            ->selectRaw(PostGIS::getGeoJSON('buildings', 'point'))
+            ->selectRaw("SUM(CASE WHEN dt.type = 'senate' THEN d.number ELSE 0 END) as senate_district")
+            ->selectRaw("SUM(CASE WHEN dt.type = 'assembly' THEN d.number ELSE 0 END) as assembly_district")
+            ->selectRaw("SUM(CASE WHEN dt.type = 'council' THEN d.number ELSE 0 END) as council_district")
         // eager load violations
             ->with('violations', function($query)use($start_formatted, $end_formatted){
                 $query->select('nyc_open_data_violation_id','apartment','building_id','codes.ordernumber','codes.definition', 'inspectiondate', 'currentstatusdate','currentstatusid')
@@ -38,23 +43,13 @@ class Buildings extends Controller
                 $join->on('violations.building_id', 'buildings.nyc_open_data_building_id')
                     ->where([['violations.inspectiondate','>=',$start_formatted], ['violations.inspectiondate','<=', $end_formatted]]);
             })
-            // join senate district
-            ->join('senate_districts as sd', function($join){
-                $join->on(...PostGIS::createSpatialJoin('buildings.point', 'sd.polygon'))
-                    ->orOn(...PostGis::createSpatialJoin('buildings.point', 'sd.multipolygon'));
+            // join district
+            ->join('districts as d', function($join){ 
+                $join->on(DB::raw("ST_within(buildings.point, CASE WHEN d.geo_type = 'polygon' THEN d.polygon WHEN d.geo_type = 'multipolygon' THEN d.multipolygon ELSE NULL END)"), '=', DB::raw('true'));
             })
-            // join assembly district
-            ->join('assembly_districts as ad', function($join){
-                $join->on(...PostGIS::createSpatialJoin('buildings.point', 'ad.polygon'))
-                    ->orOn(...PostGis::createSpatialJoin('buildings.point', 'ad.multipolygon'));
-            })
-            // join council district
-            ->join('council_districts as cd', function($join){
-                $join->on(...PostGIS::createSpatialJoin('buildings.point', 'cd.polygon'))
-                    ->orOn(...PostGis::createSpatialJoin('buildings.point', 'cd.multipolygon'));
-            })
+            ->join('district_types as dt','dt.id', 'd.district_type_id')
             ->where($query_using, $id)
-            ->groupBy('nyc_open_data_building_id', 'bin', 'address', 'zip', 'senate','assembly', 'council', 'point')
+            ->groupBy('nyc_open_data_building_id', 'bin', 'streetname','housenumber', 'point')
             ->get()->toArray();        
     }
 }

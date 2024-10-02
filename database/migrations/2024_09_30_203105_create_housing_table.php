@@ -6,6 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Database\Seeders\HousingSeeder;
+use App\Models\DistrictType;
 
 
 return new class extends Migration
@@ -26,9 +27,10 @@ return new class extends Migration
 
         $district = new District();
         $housing = new Housing();
+        $district_type = new DistrictType();
         $seeder = new HousingSeeder();
 
-        $seeder->run($housing, $district);
+        $seeder->run($housing, $district, $district_type);
 
     }
 

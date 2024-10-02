@@ -12,4 +12,10 @@ class DistrictType extends Model
     protected $fillable = [
         'type'
     ];
+
+    public function scopeCurrentDistrictType($query, string $district_type){
+
+        $query->select('type', 'id')->where('type', $district_type);
+    }
+
 }

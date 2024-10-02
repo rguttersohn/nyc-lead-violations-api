@@ -30,5 +30,14 @@ trait ValidateQueryParams {
         return $needs_to_checked;
     }
 
+    private function getFormattedEndYear(string $end_year):string{
+
+        return "$end_year-12-31";
+    }
+
+    private function getFormattedStartYear(string $start_year):string{
+
+        return "$start_year-01-01";
+    }
     
 }

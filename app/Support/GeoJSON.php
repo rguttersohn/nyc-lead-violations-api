@@ -1,54 +1,16 @@
 <?php
 
 namespace App\Support;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
+
+use Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
 use stdClass;
 
 
 class GeoJSON {
 
-    public static function createMultiPolygon (array $polygons){
-
-        $multipolygon = new MultiPolygon(
-            array_map(function($polygon){
-                return new Polygon(
-                    array_map(function($coordinates){
-                        return new LineString(
-                            array_map(function($points){
-                                return new Point($points[1],$points[0], Srid::WGS84->value);
-                            }, $coordinates)
-                        );
-                    }, $polygon),
-                    Srid::WGS84->value
-                );
-            },$polygons),
-            Srid::WGS84->value
-        );
-
-        return $multipolygon;
-        
-
-    }
-
-    public static function createPolygon (array $coordinates){
-
-        $polygon = new Polygon(
-            array_map(function($coordinate){
-                return new LineString(
-                    array_map(function($points){
-                        return new Point($points[1],$points[0]);
-                    }, $coordinate)
-                );
-            }, $coordinates),
-            Srid::WGS84->value
-        );
-
-        return $polygon;
-    }
 
     public static function convert(array $center, int $radius, $numberOfSegments)
     {
@@ -92,14 +54,14 @@ class GeoJSON {
      * 
      * @param stdClass data_query_result_object; @def a subset of the data resulting from the data query;
      */
-    public static function getGeoJSONProperties($properties, $data_query_result_object):array{
+    public static function getGeoJSONProperties($properties, $data):array{
 
         $properties_array = [];
 
         foreach($properties as $property):
            
             if($property === 'data'):
-                $property_float = floatval($data_query_result_object->{$property});
+                $property_float = floatval($data[$property]);
 
                 $properties_array[$property] = $property_float;
 
@@ -107,7 +69,7 @@ class GeoJSON {
             
             endif;
 
-            $properties_array[$property] = $data_query_result_object->{"$property"};
+            $properties_array[$property] = $data[$property];
         
         endforeach;
 
@@ -119,36 +81,38 @@ class GeoJSON {
      * @param [] $data_query_result
      * @param string[] $properties
      * @param strng $geo_type_defining_key
-     * a key in the data query result that defines the geo type of the features. Default is 'geo_type'
+     * a key in the data query result that defines the geo type of a feature. Default is 'geo_type'
      */
     
-    public static function getGeoJSON(array $data_query_result, array $properties, string $geo_type_defining_key = 'geo_type' ):array{
-
+    public static function getGeoJSON(EloquentCollection $data_query_result, array $properties, string $geo_type_defining_key = 'geo_type' ):array{
+        $data = $data_query_result->toArray();
+        
         return [
             'type' => 'FeatureCollection',
-            'features' => array_map(function(stdClass $d)use($properties, $geo_type_defining_key){
-    
+            'features' => array_map(function($d)use($properties, $geo_type_defining_key){
+                
                 return [
                     'type' => 'Feature', 
-                    'geometry' => isset($d->{$d->{$geo_type_defining_key}}) ? json_decode($d->{$d->{$geo_type_defining_key}}) : null,
+                    'geometry' => array_key_exists($geo_type_defining_key, $d) ? $d[$d[$geo_type_defining_key]] : null,
                     'properties' => self::getGeoJSONProperties($properties, $d)
                 ];
-            }, $data_query_result)
+
+            }, $data)
         ];
     }
 
-    public static function get3DGeoJson(array $data_query_result, array $properties, string $geo_type_defining_key = 'geo_type'){
+    public static function get3DGeoJson(EloquentCollection $data_query_result, array $properties, string $geo_type_defining_key = 'geo_type'){
         
+        $data = $data_query_result->toArray();
+
         $violations_geojson = [
             'type' => 'FeatureCollection',
         ];
         
         $violations_geojson['features'] = array_map(function($d)use($properties, $geo_type_defining_key){
-            
-            $coordinates = json_decode($d->point)->coordinates;
+        
+            $coordinates = $d['point']['coordinates'];
 
-            
-            
             return [
               'type' => 'Feature',
               'geometry' => !$coordinates ? [
@@ -158,7 +122,7 @@ class GeoJSON {
               'properties' => self::getGeoJSONProperties($properties, $d)
             ];
 
-          }, $data_query_result);
+          }, $data);
 
         return $violations_geojson;
     }
