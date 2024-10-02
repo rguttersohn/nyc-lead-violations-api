@@ -10,7 +10,7 @@ use App\Http\Controllers\Years;
 use App\Http\Controllers\District;
 use App\Http\Controllers\Representatives;
 use App\Http\Controllers\City;
-
+use App\Http\Controllers\Timelines;
 
 
 Route::get('/', function () {
@@ -42,6 +42,10 @@ Route::prefix('api/v1')->group(function(){
     Route::get('/council-member/{district_id}',[CouncilMember::class, 'getCouncilMember'] );
 
     Route::get('/reps/{district_type}', [Representatives::class, 'getReps']);
+
+    Route::get('timelines/districts/{district_type}/{district_id}', [Timelines::class, 'getDistrictTimeline']);
+
+    Route::get('timelines/buildings/{id}', [Timelines::class, 'getBuildingTimeline']);
 
 });
 

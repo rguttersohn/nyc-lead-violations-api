@@ -5,19 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\ValidateQueryParams;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Exception;
 use App\Support\CacheKey;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use App\Http\Controllers\Traits\ViolationQueries;
 use App\Support\GeoJSON;
 use App\Models\Building;
 use App\Support\PostGIS;
-use Illuminate\Support\Facades\DB;
 
 class Buildings3D extends Controller
 {
-    use ViolationQueries, ValidateQueryParams;
+    use ValidateQueryParams;
    
     public function getBuildings(Request $request){
 

@@ -3,18 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\ValidateQueryParams;
-use App\Http\Controllers\Traits\ViolationQueries;
 use App\Support\GeoJSON;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use App\Models\DistrictType;
 use App\Support\PostGIS;
 use App\Models\District;
 
 class Districts extends Controller
 {
-    use ViolationQueries, ValidateQueryParams;
+    use ValidateQueryParams;
     
     public function getAllDistricts(){
 
@@ -30,10 +28,10 @@ class Districts extends Controller
         $valid_status = $this->getValidStatusQuery($status);
         $status_needs_checking = $this->statusNeedsToBeChecked($valid_status);
 
-        $district_type = DistrictType::currentDistrictType($district_type)->first();
-
         $start_formatted = $this->getFormattedStartYear($start_year);
         $end_formatted = $this->getFormattedEndYear($end_year);
+
+        $district_type = DistrictType::currentDistrictType($district_type)->first();
 
         if(!$district_type):
             
