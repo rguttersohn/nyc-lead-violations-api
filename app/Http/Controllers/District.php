@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 use App\Http\Controllers\Traits\ValidateQueryParams;
 use App\Models\DistrictType;
 use App\Models\District as DistrictModel;
-
+use App\Support\PostGIS;
 
 class District extends Controller
 {
@@ -31,20 +31,22 @@ class District extends Controller
             return response(['error'=>'district id not found'], 400);
         endif;
 
-        return DistrictModel::select('districts.id','number as district', 'h.units as total_housing_units', 'h.source as housing_source')
+        return DistrictModel::select('districts.id','number as district', 'h.units as total_housing_units', 'h.source as housing_source', 'districts.geo_type')
             ->selectRaw("'$current_district_type->type' as district_type")
             ->selectRaw("'$valid_status' as status")
             ->selectRaw("'$start_year' as start_year")
             ->selectRaw("'$end_year' as end_year")
+            ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'polygon', .0001))
+            ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'multipolygon', .0001))
             ->selectRaw('COUNT(DISTINCT b.id) as buildings_with_violations')
             ->selectRaw('COUNT(v.*) as violations')
             ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
             ->joinBuildings()
             ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status)
             ->join('housing as h', 'h.district_id','=','districts.id')
-            ->where('district_type_id', $district_type)
+            ->where('district_type_id', $current_district_type->id)
             ->where('number', $district_id)
-            ->groupBy('district', 'district_type','districts.id','total_housing_units', 'housing_source')
+            ->groupBy('district', 'district_type','districts.id','total_housing_units', 'housing_source', 'districts.geo_type','polygon', 'multipolygon')
             ->get();
     }
 }

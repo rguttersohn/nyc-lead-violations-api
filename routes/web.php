@@ -47,5 +47,6 @@ Route::prefix('api/v1')->group(function(){
 
     Route::get('timelines/buildings/{id}', [Timelines::class, 'getBuildingTimeline']);
 
+
 });
 

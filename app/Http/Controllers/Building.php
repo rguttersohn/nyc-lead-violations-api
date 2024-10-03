@@ -27,9 +27,9 @@ class Building extends Controller
                 AVG(CURRENT_DATE - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
                 ')
             ->selectRaw(PostGIS::getGeoJSON('buildings', 'point'))
-            ->selectRaw("SUM(CASE WHEN dt.type = 'senate' THEN d.number ELSE 0 END) as senate_district")
-            ->selectRaw("SUM(CASE WHEN dt.type = 'assembly' THEN d.number ELSE 0 END) as assembly_district")
-            ->selectRaw("SUM(CASE WHEN dt.type = 'council' THEN d.number ELSE 0 END) as council_district")
+            ->selectRaw("SUM(DISTINCT CASE WHEN dt.type = 'senate' THEN d.number ELSE 0 END) AS senate")
+            ->selectRaw("SUM(DISTINCT CASE WHEN dt.type = 'assembly' THEN d.number ELSE 0 END) AS assembly")
+            ->selectRaw("SUM(DISTINCT CASE WHEN dt.type = 'council' THEN d.number ELSE 0 END) AS council")
         // eager load violations
             ->with('violations', function($query)use($start_formatted, $end_formatted){
                 $query->select('nyc_open_data_violation_id','apartment','building_id','codes.ordernumber','codes.definition', 'inspectiondate', 'currentstatusdate','currentstatusid')
