@@ -16,5 +16,6 @@ class Status extends Model
         'name',
         'definition'
     ];
+
     
 }

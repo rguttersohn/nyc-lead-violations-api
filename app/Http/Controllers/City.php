@@ -29,8 +29,8 @@ class City extends Controller
 
         $data = Building::selectRaw("'city' as district_type")
             ->selectRaw('COUNT(v.*) as violations')
-            ->selectRaw('COUNT(DISTINCT buildings.id) as buildings_with_violation')
-            ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violation')
+            ->selectRaw('COUNT(DISTINCT buildings.id) as buildings_with_violations')
+            ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
             ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status)
             ->get()->toArray();
 

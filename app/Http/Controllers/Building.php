@@ -36,7 +36,9 @@ class Building extends Controller
                     ->selectRaw('CASE WHEN currentstatusid = 19 THEN currentstatusdate - inspectiondate ELSE CURRENT_DATE - inspectiondate END as days_open')
                     ->join('codes', 'codes.ordernumber', 'violations.ordernumber')
                     ->where([['violations.inspectiondate', '>=', $start_formatted],['violations.inspectiondate', '<=', $end_formatted]])
-                    ;
+                    ->with('status', function($query){
+                        $query->select('id', 'currentstatusid', 'name', 'definition');
+                    });
             })
             // join violations
             ->join('violations', function($join)use($start_formatted, $end_formatted){

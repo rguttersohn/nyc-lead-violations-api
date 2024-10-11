@@ -43,7 +43,7 @@ class District extends Controller
             ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
             ->joinBuildings()
             ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status)
-            ->join('housing as h', 'h.district_id','=','districts.id')
+            ->leftJoin('housing as h', 'h.district_id','=','districts.id')
             ->where('district_type_id', $current_district_type->id)
             ->where('number', $district_id)
             ->groupBy('district', 'district_type','districts.id','total_housing_units', 'housing_source', 'districts.geo_type','polygon', 'multipolygon')

@@ -6,8 +6,6 @@ use Illuminate\Database\Seeder;
 use App\Services\OpenDataQueries;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
 use App\Models\Violation;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Pool;
@@ -78,7 +76,7 @@ class BuildingViolationSeeder extends Seeder
                     '$select' => $queries->getSelectedColumns(),
                     '$limit' => $this->limit,
                     '$offset' => $offset,
-                    '$where' => "caseless_one_of(`ordernumber`,{$queries->getOrderNumbers()}) AND {$queries->getStartYear(2024)} AND {$queries->getEndYear(2024)}",
+                    '$where' => "caseless_one_of(`ordernumber`,{$queries->getOrderNumbers()})",
                     '$order' => 'violationid'
                 ])
                 ->retry(5, 300)
@@ -142,7 +140,7 @@ class BuildingViolationSeeder extends Seeder
                     endif;
 
                 endif;
-                dump($attributes->currentstatusid);
+                
                 $violation->create([
                     'nyc_open_data_violation_id' => $attributes->violationid,
                     'building_id' => $attributes->buildingid,

@@ -2,21 +2,20 @@
 
 namespace App\Jobs;
 
-use App\Models\ScheduleRuns;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use App\Services\OpenDataQueries;
 use App\Models\Violation;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
 use App\Models\ScheduleRun;
 use App\Models\Building;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
+use Exception;
+use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Str;
 
 
 class UpdateLeadViolations implements ShouldQueue
@@ -24,7 +23,6 @@ class UpdateLeadViolations implements ShouldQueue
     use Queueable;
 
     public $violation;
-
     public $schedule_run;
     public $building;
     /**
@@ -81,7 +79,24 @@ class UpdateLeadViolations implements ShouldQueue
 
         endif;
 
+        if(!json_decode($data->body())):
+
+            Log::error($data->body());
+
+            $this->schedule_run->completed_on = Carbon::now();
+            $this->schedule_run->save();
+            die();
+
+        endif;
+        
+
+
+        $new_buildings = [];
+
         foreach(json_decode($data->body()) as $attributes):
+            if(!$attributes):
+                die();
+            endif;
 
             $current_building = $this->building->where('nyc_open_data_building_id', (int)$attributes->buildingid)->first();
             
@@ -92,31 +107,16 @@ class UpdateLeadViolations implements ShouldQueue
                     'bin' => isset($attributes->bin) ? $attributes->bin : null,
                     'housenumber' => $attributes->housenumber,
                     'streetname' => $attributes->streetname,
-                    'point' => isset($attributes->longitude, $attributes->latitude) ? new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value) : null,
-                    'zip' => isset($attributes->zip) ? $attributes->zip : null,
-
+                    'boro' => $attributes->boro
                 ]);
+
+                array_push($new_buildings, $attributes->buildingid);
 
             else:
 
                 if($current_building->bin === null && isset($attributes->bin)):
                     
                     $current_building->bin = $attributes->bin;
-                    $current_building->save();
-
-                endif;
-
-                if($current_building->point === null && isset($attributes->longitude, $attributes->latitude)):
-                    
-                    $current_building->point = new Point($attributes->latitude, $attributes->longitude, Srid::WGS84->value);
-                    $current_building->save();
-
-                endif;
-
-
-                if($current_building->zip === null && isset($attributes->zip)):
-                    
-                    $current_building->zip = $attributes->zip;
                     $current_building->save();
 
                 endif;
@@ -137,10 +137,110 @@ class UpdateLeadViolations implements ShouldQueue
 
         endforeach;
 
-        $this->schedule_run->success = true;
-        $this->schedule_run->completed_on = Carbon::now();
-        $this->schedule_run->save();
+        // geocode
 
+        $buildings = $this->building->select('id','bin', 'housenumber','streetname', 'boro')->whereIn('nyc_open_data_building_id', $new_buildings)->get();
+
+        $buildings->each(function($building){
+
+            if($building->point):
+                return;
+            endif;
+
+            dump("$building->housenumber $building->streetname, $building->boro");
+
+            if($building->bin):
+                
+                $endpoint = 'bin';
+
+                $geo_coding = Http::retry(5, function(int $attempt, Exception $exception){
+                    if($exception instanceof RequestException):
+                        
+                        $message = $exception->getMessage();
+                        $time_string = Str::between($message, 'Rate limit is exceeded. Try again in ', ' seconds.');
+                        $time_string .= "000";
+                        $attempt = (int) $time_string;
+                        dump($attempt);
+                        
+                        return $attempt;        
+                    
+                    endif;
+
+                })->get('https://api.nyc.gov/geo/geoclient/v2/bin.json',[
+                    'bin' => $building->bin,
+                    'key' => $_ENV['GEO_CODING_KEY']
+                ]);
+            
+            else:
+
+                $endpoint = 'address';
+
+                $geo_coding = Http::retry(5, function(int $attempt, Exception $exception){
+                    
+                    if($exception instanceof RequestException):
+                        
+                        $message = $exception->getMessage();
+                        $time_string = Str::between($message, 'Rate limit is exceeded. Try again in ', ' seconds.');
+                        $time_string .= "000";
+
+                        $attempt = (int) $time_string;
+                        dump($attempt);
+                        
+                        return $attempt;
+    
+                    endif;
+
+                })->get('https://api.nyc.gov/geo/geoclient/v2/address.json',[
+                    'houseNumber' => $building->housenumber,
+                    'street' => $building->streetname,
+                    'borough' => $building->boro,
+                    'key' => $_ENV['GEO_CODING_KEY']
+                ]);
+
+            endif;
+      
+            if(!$geo_coding->ok()):
+            
+                dump($geo_coding->body());
+
+                Log::error($geo_coding->body());
+                
+                return;
+            
+            endif;
+
+            $geo_decoded = json_decode($geo_coding->body());
+            
+            $longitude = isset($geo_decoded->{$endpoint}->longitudeInternalLabel) ? $geo_decoded->{$endpoint}->longitudeInternalLabel : null;
+            $latitude = isset($geo_decoded->{$endpoint}->latitudeInternalLabel) ? $geo_decoded->{$endpoint}->latitudeInternalLabel : null;
+
+            if($longitude && $latitude):
+                                
+                $building->point = new Point($latitude, $longitude, srid::WGS84->value);
+
+                if(!$building->bin && isset($geo_decoded->{$endpoint}->buildingIdentificationNumber)):
+                    
+                    $building->bin = $geo_decoded->{$endpoint}->buildingIdentificationNumber;
+
+                endif;
+
+                $building->save();
+                
+                dump('save complete');
+
+            else:
+
+                dump('long and lat is empty', $building->housenumber, $building->streetname);
+
+            endif;
+     
+        
+        });
+
+        $this->schedule_run->completed_on = Carbon::now();
+        $this->schedule_run->success = true;
+        $this->schedule_run->save();
+        
     }
 
 }

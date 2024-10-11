@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use App\Models\DistrictType;
 use App\Support\PostGIS;
 use App\Models\District;
-use Illuminate\Support\Facades\DB;
+
 
 class Districts extends Controller
 {
@@ -17,7 +17,10 @@ class Districts extends Controller
     
     public function getAllDistricts(){
 
-        return DistrictType::select('type', 'id')->get()->toArray();
+        return DistrictType::select('type', 'id')
+            ->where('type', '!=', 'uhf')
+            ->with('districts', fn($query)=>$query->select('id','number as district', 'district_type_id'))
+            ->get();
     }
 
     public function getDistrictData(Request $request, $district_type){
@@ -33,31 +36,35 @@ class Districts extends Controller
         $end_formatted = $this->getFormattedEndYear($end_year);
 
         $district_type = DistrictType::currentDistrictType($district_type)->first();
-
+        
         if(!$district_type):
             
             return response(['error'=> 'District ID not found'], 400);
         
         endif;
 
-        $data = District::select('number as district', 'districts.geo_type')
+        $data = District::select('number as district', 'districts.geo_type', 'h.units as total_housing_units', 'h.source as housing_source')
             ->selectRaw("'$district_type->type' as district_type")
             ->selectRaw("'$valid_status' as status")
             ->selectRaw("'$start_year' as start_year")
             ->selectRaw("'$end_year' as end_year")
             ->selectRaw('COALESCE(COUNT(v.*), 0) as violations')
-            ->selectRaw(PostGIS::simplifyGeoJSON('districts','polygon', .0002))
-            ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'multipolygon', .0002))
+            ->selectRaw(PostGIS::simplifyGeoJSON('districts','polygon', .0001))
+            ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'multipolygon', .0001))
+            ->selectRaw('COUNT(DISTINCT b.id) as buildings_with_violations')
+            ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
             ->where('district_type_id', $district_type->id)
             ->joinBuildings('left')
             ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status, 'left')
+            ->leftJoin('housing as h', 'h.district_id','=','districts.id')
             ->orderBy('district')
-            ->groupBy('district', 'district_type', 'districts.geo_type', 'polygon', 'multipolygon')
+            ->groupBy('district', 'district_type', 'districts.geo_type', 'polygon', 'multipolygon','total_housing_units', 'housing_source')
             ->get();
-        
-        $geojson = GeoJSON::getGeoJSON($data, ['district', 'district_type','violations', 'status', 'start_year', 'end_year']);
+            
+        $geojson = GeoJSON::getGeoJSON($data, ['district', 'district_type','violations', 'status', 'start_year', 'end_year','buildings_with_violations','units_with_violations','total_housing_units', 'housing_source']);
 
         return $geojson;
 
     }
+
 }

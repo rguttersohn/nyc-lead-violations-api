@@ -43,12 +43,14 @@ class District extends Model
 
     public function scopeJoinBuildings($query, $join_type = null){
         if($join_type === 'left'):
-            $query->leftJoin('buildings as b', function($join){
-                $join->on(DB::raw("ST_within(b.point, CASE WHEN districts.geo_type = 'polygon' THEN districts.polygon WHEN districts.geo_type='multipolygon' THEN districts.multipolygon ELSE NULL END)"),'=', DB::raw('true'));
+            $query->leftJoin('buildings as b', function($join) {
+                $join->where(DB::raw("ST_Within(b.point, districts.polygon)"), '=', DB::raw('true'))
+                     ->orWhere(DB::raw("ST_Within(b.point, districts.multipolygon)"), '=', DB::raw('true'));
             });
         else:
-            $query->join('buildings as b', function($join){
-                $join->on(DB::raw("ST_within(b.point, CASE WHEN districts.geo_type = 'polygon' THEN districts.polygon WHEN districts.geo_type='multipolygon' THEN districts.multipolygon ELSE NULL END)"),'=', DB::raw('true'));
+            $query->join('buildings as b', function($join) {
+                $join->where(DB::raw("ST_Within(b.point, districts.polygon)"), '=', DB::raw('true'))
+                     ->orWhere(DB::raw("ST_Within(b.point, districts.multipolygon)"), '=', DB::raw('true'));
             });
         endif;
        

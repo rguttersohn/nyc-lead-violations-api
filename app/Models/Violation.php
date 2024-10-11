@@ -38,5 +38,10 @@ class Violation extends Model
     public function buildings():BelongsTo{
         return $this->belongsTo(Building::class,'building_id','nyc_open_data_building_id');
     }
+
+    public function status():BelongsTo{
+        return $this->belongsTo(Status::class, 'currentstatusid', 'currentstatusid');
+    }
+
     
 }

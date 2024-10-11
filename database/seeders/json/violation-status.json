@@ -98,5 +98,10 @@
     "currentstatusid": 9,
     "name": "Violation Dismissed",
     "definition": null
+  },
+  {
+    "currentstatusid": 48,
+    "name": "Downgrade Pending Inspection", 
+    "definition": null
   }
 ]
