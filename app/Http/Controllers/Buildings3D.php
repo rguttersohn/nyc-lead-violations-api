@@ -19,23 +19,30 @@ class Buildings3D extends Controller
     public function getBuildings(Request $request){
 
         $uri = $request->path();
-        $start_year = $request->query('start_year', '2024');
-        $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
+      
+        //status
         $status = $request->query('status', 'all');
+        $valid_status = $this->getValidStatusQuery($status);
+        $status_needs_checking = $this->statusNeedsToBeChecked($valid_status);
+
+         //code
+         $code = $request->query('code', 'all');
+         $valid_code = $this->getValidCodeQuery($code);
+         $code_needs_filtering = $this->codeNeedsFiltering($valid_code);
+        
+        //years
+        $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
+        $start_year = $request->query('start_year', '2024');
+        $start_formatted = $this->getFormattedStartYear($start_year);
+        $end_formatted = $this->getFormattedEndYear($end_year);
 
         $cache_key = CacheKey::generateGeoJsonKey($uri, $start_year, $end_year, $status, '3d');
 
-        $valid_status = $this->getValidStatusQuery($status);
-
-        $status_needs_checking = $this->statusNeedsToBeChecked($valid_status);
-
-        $start_formatted = $this->getFormattedStartYear($start_year);
-        $end_formatted = $this->getFormattedEndYear($end_year);
 
         $data = Building::select('streetname', 'housenumber', 'bin', 'nyc_open_data_building_id', 'geo_type', 'point')
             ->selectRaw('COUNT(v.*) as violations')
             ->selectRaw(PostGIS::getGeoJSON('buildings', 'point'))
-            ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status)
+            ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status, null, $code_needs_filtering, $code)
             ->groupBy('streetname', 'housenumber', 'bin', 'nyc_open_data_building_id', 'point', 'geo_type')
             ->where('buildings.point', '!=', 'null')
             ->get();

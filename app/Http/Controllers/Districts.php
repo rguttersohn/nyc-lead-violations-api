@@ -26,12 +26,20 @@ class Districts extends Controller
     public function getDistrictData(Request $request, $district_type){
 
         $uri = $request->path();
-        $start_year = $request->query('start_year', Carbon::now('edt')->format('Y'));
-        $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
+        
+        // status
         $status = $request->query('status', 'all');
         $valid_status = $this->getValidStatusQuery($status);
         $status_needs_checking = $this->statusNeedsToBeChecked($valid_status);
 
+        //code
+        $code = $request->query('code', 'all');
+        $valid_code = $this->getValidCodeQuery($code);
+        $code_needs_filtering = $this->codeNeedsFiltering($valid_code);
+        
+        //years
+        $start_year = $request->query('start_year', Carbon::now('edt')->format('Y'));
+        $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
         $start_formatted = $this->getFormattedStartYear($start_year);
         $end_formatted = $this->getFormattedEndYear($end_year);
 
@@ -55,7 +63,7 @@ class Districts extends Controller
             ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
             ->where('district_type_id', $district_type->id)
             ->joinBuildings('left')
-            ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status, 'left')
+            ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status, 'left', $code_needs_filtering, $valid_code)
             ->leftJoin('housing as h', 'h.district_id','=','districts.id')
             ->orderBy('district')
             ->groupBy('district', 'district_type', 'districts.geo_type', 'polygon', 'multipolygon','total_housing_units', 'housing_source')

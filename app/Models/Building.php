@@ -43,10 +43,10 @@ class Building extends Model
         return $this->hasMany(Violation::class, 'building_id', 'nyc_open_data_building_id');
     }
 
-    public function scopeJoinViolations($query, $start_formatted, $end_formatted, $status_needs_checking, $status, $join_type = null){
+    public function scopeJoinViolations($query, $start_formatted, $end_formatted, $status_needs_checking, $status, $join_type = null, $code_needs_filtering, $code){
         if($join_type === 'left'):
 
-            $query->leftJoin('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status){
+            $query->leftJoin('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status, $code_needs_filtering, $code){
                 $join->on('v.building_id', 'buildings.nyc_open_data_building_id')
                     ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted]])
                     ->when($status_needs_checking, function($query)use($status){
@@ -60,12 +60,15 @@ class Building extends Model
                         $query->where('v.currentstatusid', 19);
                       
                       endif;
-                  });
+                  })->when($code_needs_filtering, function($query) use($code){
+                    $query->where('v.ordernumber', $code);
+                    });
+
               });
 
         else:
             
-            $query->join('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status){
+            $query->join('violations as v', function($join)use($start_formatted, $end_formatted, $status_needs_checking, $status, $code_needs_filtering, $code){
                 $join->on('v.building_id', 'buildings.nyc_open_data_building_id')
                     ->where([['v.inspectiondate', '>=', $start_formatted],['v.inspectiondate', '<=', $end_formatted]])
                     ->when($status_needs_checking, function($query)use($status){
@@ -79,7 +82,9 @@ class Building extends Model
                         $query->where('v.currentstatusid', 19);
                       
                       endif;
-                  });
+                  })->when($code_needs_filtering, function($query) use($code){
+                        $query->where('v.ordernumber', $code);
+                    });
               });
 
         endif;

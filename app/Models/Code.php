@@ -23,6 +23,10 @@ class Code extends Model
         ];
     }
 
+    public function scopeCurrentCode($query, $code){
+        $query->where('ordernumber', $code);
+    }
+
 
 
 }

@@ -43,5 +43,4 @@ class Violation extends Model
         return $this->belongsTo(Status::class, 'currentstatusid', 'currentstatusid');
     }
 
-    
 }
