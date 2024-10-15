@@ -11,7 +11,7 @@ use App\Http\Controllers\District;
 use App\Http\Controllers\Representatives;
 use App\Http\Controllers\City;
 use App\Http\Controllers\Timelines;
-
+use App\Http\Controllers\Codes;
 
 Route::get('/', function () {
     return [
@@ -46,6 +46,8 @@ Route::prefix('api/v1')->group(function(){
     Route::get('timelines/districts/{district_type}/{district_id}', [Timelines::class, 'getDistrictTimeline']);
 
     Route::get('timelines/buildings/{id}', [Timelines::class, 'getBuildingTimeline']);
+
+    Route::get('codes',[Codes::class, 'getCodes']);
 
 });
 
