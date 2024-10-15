@@ -46,7 +46,7 @@ class District extends Controller
             ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'polygon', .0001))
             ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'multipolygon', .0001))
             ->selectRaw('COUNT(DISTINCT b.id) as buildings_with_violations')
-            ->selectRaw('COUNT(v.*) as violations')
+            ->selectRaw('COALESCE(COUNT(v.*), 0) as violations')
             ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
             ->joinBuildings()
             ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status, null, $code_needs_filtering, $valid_code)

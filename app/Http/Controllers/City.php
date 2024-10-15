@@ -18,12 +18,20 @@ class City extends Controller
     public function getCityData(Request $request){
         
         $uri = $request->path();
-        $start_year = $request->query('start_year', Carbon::now('edt')->format('Y'));
-        $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
+        
+        //status
         $status = $request->query('status', 'all');
         $valid_status = $this->getValidStatusQuery($status);
         $status_needs_checking = $this->statusNeedsToBeChecked($valid_status);
+        
+        //code
+        $code = $request->query('code', 'all');
+        $valid_code = $this->getValidCodeQuery($code);
+        $code_needs_filtering = $this->codeNeedsFiltering($valid_code);
 
+        //years
+        $start_year = $request->query('start_year', Carbon::now('edt')->format('Y'));
+        $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
         $start_formatted = $this->getFormattedStartYear($start_year);
         $end_formatted = $this->getFormattedEndYear($end_year);
 
@@ -31,7 +39,7 @@ class City extends Controller
             ->selectRaw('COUNT(v.*) as violations')
             ->selectRaw('COUNT(DISTINCT buildings.id) as buildings_with_violations')
             ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) as units_with_violations')
-            ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status)
+            ->joinViolations($start_formatted, $end_formatted, $status_needs_checking, $status, null, $code_needs_filtering, $valid_code)
             ->get()->toArray();
 
 
