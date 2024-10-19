@@ -9,6 +9,7 @@ use App\Support\GeoJSON;
 use App\Support\CacheKey;
 use App\Models\Building;
 use App\Support\PostGIS;
+use Illuminate\Support\Facades\Cache;
 
 class Buildings2D extends Controller
 {
@@ -36,6 +37,13 @@ class Buildings2D extends Controller
 
         $cache_key = CacheKey::generateGeoJsonKey($uri, $status, $start_year, $end_year, "2d");
 
+        if(Cache::has($cache_key)):
+
+          return response(Cache::get($cache_key))
+                  ->header('From-Cache', 'true');
+
+        endif;
+
         $data = Building::select('streetname', 'housenumber', 'bin', 'nyc_open_data_building_id', 'geo_type', 'point')
           ->selectRaw('COUNT(v.*) as violations')
           ->selectRaw(PostGIS::getGeoJSON('buildings', 'point'))
@@ -46,7 +54,10 @@ class Buildings2D extends Controller
 
         $geojson = GeoJSON::getGeoJSON($data, ['streetname','housenumber','bin', 'nyc_open_data_building_id', 'violations']);
 
-        return $geojson;
+        Cache::put($cache_key, $geojson);
+
+        return response($geojson)
+          ->header('From-Cache', 'false');
       
     }
   
