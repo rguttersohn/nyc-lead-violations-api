@@ -42,7 +42,7 @@ class OpenDataQueries {
     }
 
     public function getDates(string $timestamp){
-      return "currentstatusdate > '$timestamp'";
+      return "currentstatusdate >= '$timestamp'";
     }
 
     public function getStartYear(string $year){
