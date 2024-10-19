@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use App\Models\Building as BuildingModel;
+use App\Support\CacheKey;
 use App\Support\PostGIS;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class Building extends Controller
 {
     public function getBuilding(Request $request, $id){
+
+        $uri = $request->path();
 
         $start_year = $request->query('start_year', Carbon::now('edt')->format('Y'));
         $end_year = $request->query('end_year', Carbon::now('edt')->format('Y'));
@@ -21,7 +25,14 @@ class Building extends Controller
 
         $query_using = $request->query('query_using', 'nyc_open_data_building_id');
 
-        return BuildingModel::select('nyc_open_data_building_id', 'bin', 'streetname', 'housenumber')
+        $cache_key = CacheKey::generateSubsetKey($uri, 'all', $start_year, $end_year, $id);
+        
+        if(Cache::has($cache_key)):
+            return response(Cache::get($cache_key))
+                ->header('From-Cache', 'true');
+        endif;
+
+        $data = BuildingModel::select('nyc_open_data_building_id', 'bin', 'streetname', 'housenumber')
             ->selectRaw('
                 AVG(violations.currentstatusdate - violations.inspectiondate) FILTER(WHERE violations.currentstatusid = 19) as avg_days_before_closed,
                 AVG(CURRENT_DATE - violations.inspectiondate) FILTER(WHERE violations.currentstatusid != 19) as avg_days_open
@@ -52,6 +63,12 @@ class Building extends Controller
             ->join('district_types as dt','dt.id', 'd.district_type_id')
             ->where($query_using, $id)
             ->groupBy('nyc_open_data_building_id', 'bin', 'streetname','housenumber', 'point')
-            ->get()->toArray();        
+            ->get()->toArray(); 
+        
+        Cache::put($cache_key, $data);
+
+        return response($data)
+            ->header('From-Cache', 'false');
+
     }
 }
