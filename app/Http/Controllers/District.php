@@ -45,7 +45,7 @@ class District extends Controller
             ->selectRaw("'$end_year' as end_year")
             ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'polygon', .0001))
             ->selectRaw(PostGIS::simplifyGeoJSON('districts', 'multipolygon', .0001))
-            ->selectRaw('COUNT(DISTINCT b.id) FILTER(WHERE b.nyc_open_data_building_id IS NOT NULL) as buildings_with_violations')
+            ->selectRaw('COUNT(DISTINCT b.id) FILTER(WHERE b.nyc_open_data_building_id = v.building_id) AS buildings_with_violations')
             ->selectRaw('COALESCE(COUNT(v.*), 0) as violations')
             ->selectRaw('COUNT(DISTINCT (v.building_id, v.apartment)) FILTER(WHERE v.building_id IS NOT NULL) AS units_with_violations')
             ->joinBuildings('left')
