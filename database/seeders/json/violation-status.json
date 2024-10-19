@@ -22,7 +22,7 @@
   {
     "currentstatusid": 6,
     "name": "Certification Postponement Granted",
-    "definition": "The property owner applied to HPD to extend the correction date for the violation, and HPD granted the request.  The new correction and certification date is in the columns NEW CORRECT BY DATE and  NEW CERT BY DATE."
+    "definition": "The property owner applied to HPD to extend the correction date for the violation, and HPD granted the request."
   },
   {
     "currentstatusid": 7,
