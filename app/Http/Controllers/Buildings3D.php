@@ -37,7 +37,13 @@ class Buildings3D extends Controller
         $end_formatted = $this->getFormattedEndYear($end_year);
 
         $cache_key = CacheKey::generateGeoJsonKey($uri, $start_year, $end_year, $status, '3d');
+        
+        if(Cache::has($cache_key)):
+            
+            return response(Cache::get($cache_key))
+                    ->header('From-Cache', 'true');
 
+        endif;
 
         $data = Building::select('streetname', 'housenumber', 'bin', 'nyc_open_data_building_id', 'geo_type', 'point')
             ->selectRaw('COUNT(v.*) as violations')
@@ -49,7 +55,10 @@ class Buildings3D extends Controller
 
         $geojson = GeoJSON::get3DGeoJson($data, ['streetname','housenumber','bin', 'nyc_open_data_building_id', 'violations']);
         
-        return $geojson;
+        Cache::put($cache_key, $geojson);
+
+        return response($geojson)
+            ->header('From-Cache', 'false');
   
     }
 }
