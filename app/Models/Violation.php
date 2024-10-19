@@ -35,6 +35,19 @@ class Violation extends Model
         ];
     }
 
+    protected static function booted()
+    {
+        static::created(function ($model) {
+            // Clear cache after model is created
+            Cache::clear();
+        });
+
+        static::updated(function ($model) {
+            // Clear cache after model is updated
+            Cache::clear();
+        });
+    }
+
     public function buildings():BelongsTo{
         return $this->belongsTo(Building::class,'building_id','nyc_open_data_building_id');
     }

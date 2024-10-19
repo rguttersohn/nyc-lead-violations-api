@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MatanYadaev\EloquentSpatial\Objects\Point;
+use Illuminate\Support\Facades\Cache;
 
 class Building extends Model
 {
@@ -39,6 +40,7 @@ class Building extends Model
         ];
     }
 
+    
     public function violations():HasMany{
         return $this->hasMany(Violation::class, 'building_id', 'nyc_open_data_building_id');
     }
