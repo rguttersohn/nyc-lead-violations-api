@@ -9,7 +9,9 @@ use Illuminate\Support\Carbon;
 use App\Models\DistrictType;
 use App\Support\PostGIS;
 use App\Models\District;
-
+use App\Support\CacheKey;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Response;
 
 class Districts extends Controller
 {
@@ -43,10 +45,20 @@ class Districts extends Controller
         $start_formatted = $this->getFormattedStartYear($start_year);
         $end_formatted = $this->getFormattedEndYear($end_year);
 
+        $cache_key = CacheKey::generateGeoJsonKey($uri, $status, $start_year, $end_year, '2d');
+        
+        if(Cache::has($cache_key)):
+
+            return response(Cache::get($cache_key))
+                ->header('From-Cache', 'true');
+
+        endif;
+
         $district_type = DistrictType::currentDistrictType($district_type)->first();
         
         if(!$district_type):
             
+            Response::header('from-cache', true);            
             return response(['error'=> 'District ID not found'], 400);
         
         endif;
@@ -71,7 +83,10 @@ class Districts extends Controller
             
         $geojson = GeoJSON::getGeoJSON($data, ['district', 'district_type','violations', 'status', 'start_year', 'end_year','buildings_with_violations','units_with_violations','total_housing_units', 'housing_source']);
 
-        return $geojson;
+        Cache::put($cache_key, $geojson);
+                
+        return response($geojson)
+            ->header('From-Cache', 'false');
 
     }
 
