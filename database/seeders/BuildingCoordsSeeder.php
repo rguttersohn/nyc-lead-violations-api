@@ -21,7 +21,6 @@ class BuildingCoordsSeeder extends Seeder
     public function run(Building $building): void
     {
 
-    
         $buildings = $building->select('id','bin', 'housenumber','streetname', 'boro')->get();
 
 

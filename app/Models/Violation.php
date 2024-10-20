@@ -39,12 +39,12 @@ class Violation extends Model
     {
         static::created(function ($model) {
             // Clear cache after model is created
-            Cache::clear();
+            Cache::flush();
         });
 
         static::updated(function ($model) {
             // Clear cache after model is updated
-            Cache::clear();
+            Cache::flush();
         });
     }
 
