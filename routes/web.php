@@ -12,6 +12,8 @@ use App\Http\Controllers\Representatives;
 use App\Http\Controllers\City;
 use App\Http\Controllers\Timelines;
 use App\Http\Controllers\Codes;
+use App\Http\Controllers\UpdatedOn;
+
 
 Route::get('/', function () {
     return [
@@ -48,6 +50,8 @@ Route::prefix('api/v1')->group(function(){
     Route::get('timelines/buildings/{id}', [Timelines::class, 'getBuildingTimeline']);
 
     Route::get('codes',[Codes::class, 'getCodes']);
+
+    Route::get('updated-on',[UpdatedOn::class, 'getUpdatedOn']);
 
 });
 

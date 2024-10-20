@@ -15,5 +15,11 @@ class ScheduleRun extends Model
         'success'
     ];
 
+   
+    public function scopeLastSuccessfulUpdate($query){
+
+        $query->select('completed_on')->where('success', true)->orderBy('completed_on')->get();
+    }
+
     
 }
